@@ -12,6 +12,9 @@ struct tlb tlb_store; // Placeholder for your TLB structure
 static unsigned long long tlb_lookups = 0;
 static unsigned long long tlb_misses  = 0;
 
+static char* physical_mem;
+static char* virtual_mem;
+
 // -----------------------------------------------------------------------------
 // Setup
 // -----------------------------------------------------------------------------
@@ -30,6 +33,8 @@ void set_physical_mem(char* bitmap) {
 
     bitmap = (char*)malloc(MEMSIZE);
     memset(bitmap, 0, MEMSIZE);
+    physical_mem = (char*)malloc(MEMSIZE);
+    virtual_mem = (char*)malloc(MAX_MEMSIZE);
 
 
 }
@@ -205,7 +210,7 @@ int put_data(void *va, void *val, int size)
     // TODO: Walk virtual pages, translate to physical addresses,
     // and copy data into simulated memory.
     
-
+    //memset(phys_addr, val, size);
 
 
     return -1; // Failure placeholder.
