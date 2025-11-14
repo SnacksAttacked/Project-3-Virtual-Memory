@@ -1,7 +1,7 @@
 
 #include "my_vm.h"
 #include <string.h>   // optional for memcpy if you later implement put/get
-HIHIHIHI
+
 // -----------------------------------------------------------------------------
 // Global Declarations (optional)
 // -----------------------------------------------------------------------------
@@ -24,9 +24,14 @@ static unsigned long long tlb_misses  = 0;
  * Return value: None.
  * Errors should be handled internally (e.g., failed allocation).
  */
-void set_physical_mem(void) {
+void set_physical_mem(char* bitmap) {
     // TODO: Implement memory allocation for simulated physical memory.
     // Use 32-bit values for sizes, page counts, and offsets.
+
+    bitmap = (char*)malloc(MEMSIZE);
+    memset(bitmap, 0, MEMSIZE);
+
+
 }
 
 // -----------------------------------------------------------------------------
@@ -46,6 +51,7 @@ void set_physical_mem(void) {
 int TLB_add(void *va, void *pa)
 {
     // TODO: Implement TLB insertion logic.
+
     return -1; // Currently returns failure placeholder.
 }
 
@@ -98,6 +104,16 @@ pte_t *translate(pde_t *pgdir, void *va)
     // TODO: Extract the 32-bit virtual address and compute indices
     // for the page directory, page table, and offset.
     // Return the corresponding PTE if found.
+    pde_t* ptr = NULL;
+    uint32_t temp = VA2U(va);
+    temp = temp >> PXMASK;
+    
+
+
+
+    //TODO later: TLB lookup
+
+
     return NULL; // Translation unsuccessful placeholder.
 }
 
