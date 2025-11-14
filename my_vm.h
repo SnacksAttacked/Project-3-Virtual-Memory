@@ -41,13 +41,13 @@
 // --- Constants for bit shifts and masks ---
 #define PDXSHIFT 22 //10 bits for page lvl 1   /** TODO: number of bits to shift for directory index **/
 #define PTXSHIFT 12 //mask out top 10 bits, 10 bits for page 2   /** TODO: number of bits to shift for table index **/
-#define PXMASK        /** TODO:  **/
+#define PXMASK   10     /** TODO:  **/
 #define OFFMASK  4095     /** TODO: **/
 
 // --- Macros to extract address components ---
-#define PDX(va) va << PDXSHIFT     /** TODO: compute directory index from virtual address **/
-#define PTX(va) va << PTXSHIFT     /** TODO: compute table index from virtual address **/
-#define OFF(va) va << OFFMASK      /** TODO: compute page offset from virtual address **/
+#define PDX(va) va >> PDXSHIFT     /** TODO: compute directory index from virtual address **/
+#define PTX(va) (va << PXMASK) >> PTXSHIFT     /** TODO: compute table index from virtual address **/
+#define OFF(va) va & OFFMASK      /** TODO: compute page offset from virtual address **/
 
 // -----------------------------------------------------------------------------
 //  Type Definitions
