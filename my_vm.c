@@ -14,6 +14,9 @@ static unsigned long long tlb_misses  = 0;
 
 static char* physical_mem;
 static char* virtual_mem;
+static char* bit_map;
+
+static volatile int mem_initialized = 0;
 
 // -----------------------------------------------------------------------------
 // Setup
@@ -27,16 +30,15 @@ static char* virtual_mem;
  * Return value: None.
  * Errors should be handled internally (e.g., failed allocation).
  */
-void set_physical_mem(char* bitmap) {
+void set_physical_mem() {
     // TODO: Implement memory allocation for simulated physical memory.
     // Use 32-bit values for sizes, page counts, and offsets.
 
-    bitmap = (char*)malloc(MEMSIZE);
-    memset(bitmap, 0, MEMSIZE);
+    bit_map = (char*)malloc(MEMSIZE);
+    memset(bit_map, 0, MEMSIZE);
     physical_mem = (char*)malloc(MEMSIZE);
     virtual_mem = (char*)malloc(MAX_MEMSIZE);
-
-
+    mem_initialized = 1;
 }
 
 // -----------------------------------------------------------------------------
@@ -170,6 +172,10 @@ void *get_next_avail(int num_pages)
  */
 void *n_malloc(unsigned int num_bytes)
 {
+    if(mem_initialized == 0)
+    {
+        set_physical_mem();
+    }
     // TODO: Determine required pages, allocate them, and map them.
     return NULL; // Allocation failure placeholder.
 }

@@ -104,7 +104,7 @@ extern struct tlb tlb_store;
  * Initializes physical memory and supporting data structures.
  * Return: None.
  */
-void set_physical_mem(char* bitmap);
+void set_physical_mem();
 
 /*
  * Adds a new virtual-to-physical translation to the TLB.
