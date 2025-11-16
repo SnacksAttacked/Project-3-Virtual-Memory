@@ -15,6 +15,7 @@ static unsigned long long tlb_misses  = 0;
 static char* physical_mem;
 static char* virtual_mem;
 static char* bit_map;
+static char* vbit_map;
 
 static volatile int mem_initialized = 0;
 
@@ -33,9 +34,14 @@ static volatile int mem_initialized = 0;
 void set_physical_mem() {
     // TODO: Implement memory allocation for simulated physical memory.
     // Use 32-bit values for sizes, page counts, and offsets.
-
-    bit_map = (char*)malloc(MEMSIZE);
-    memset(bit_map, 0, MEMSIZE);
+    unsigned long long virtual_pages = MEMSIZE/PGSIZE; 
+    unsigned long long physical_pages = MAX_MEMSIZE/PGSIZE;
+    unsigned long long BITMAP_SIZE = physical_pages/8;
+    unsigned long long VBITMAP_SIZE = virtual_pages/8;
+    bit_map = (char*)malloc(BITMAP_SIZE);
+    memset(bit_map, 0, BITMAP_SIZE);
+    vbit_map = bit_map = (char*)malloc(VBITMAP_SIZE);
+    memset(vbit_map, 0, VBITMAP_SIZE);
     physical_mem = (char*)malloc(MEMSIZE);
     virtual_mem = (char*)malloc(MAX_MEMSIZE);
     mem_initialized = 1;
@@ -216,7 +222,7 @@ int put_data(void *va, void *val, int size)
     // TODO: Walk virtual pages, translate to physical addresses,
     // and copy data into simulated memory.
     
-    //memset(phys_addr, val, size);
+    //memcpy(phys_addr, val, size);
 
 
     return -1; // Failure placeholder.
