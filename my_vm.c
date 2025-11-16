@@ -34,17 +34,79 @@ static volatile int mem_initialized = 0;
 void set_physical_mem() {
     // TODO: Implement memory allocation for simulated physical memory.
     // Use 32-bit values for sizes, page counts, and offsets.
-    unsigned long long virtual_pages = MEMSIZE/PGSIZE; 
-    unsigned long long physical_pages = MAX_MEMSIZE/PGSIZE;
+    unsigned long long virtual_pages = MAX_MEMSIZE/PGSIZE; 
+    unsigned long long physical_pages = MEMSIZE/PGSIZE;
     unsigned long long BITMAP_SIZE = physical_pages/8;
     unsigned long long VBITMAP_SIZE = virtual_pages/8;
     bit_map = (char*)malloc(BITMAP_SIZE);
     memset(bit_map, 0, BITMAP_SIZE);
-    vbit_map = bit_map = (char*)malloc(VBITMAP_SIZE);
+    vbit_map = (char*)malloc(VBITMAP_SIZE);
     memset(vbit_map, 0, VBITMAP_SIZE);
     physical_mem = (char*)malloc(MEMSIZE);
     virtual_mem = (char*)malloc(MAX_MEMSIZE);
     mem_initialized = 1;
+}
+
+static void set_bit_at_index(char *bitmap, int index)
+{
+    int b = index / 8;
+    int position = index % 8;
+    bitmap[b] = bitmap[b] ^ (1 << position);
+    return;
+}
+
+static int get_bit_at_index(char *bitmap, int index)
+{
+    int b = index / 8;
+    int shift = index % 8;
+    //Get to the location in the character bitmap array
+    //Hint: Right shift and AND will be invaluable here!
+    return (bitmap[b] >> shift) & 1;
+}
+
+unsigned long long find_free(char* bitmap, unsigned long long page_ct, unsigned long long pages_needed)
+{
+    int found = 0;
+    unsigned long long contiguous = 0;
+    unsigned long long starting_index = 0;
+    unsigned long long bit_index = 0;
+    while(contiguous < pages_needed && bit_index < page_ct)
+    {
+        if(get_bit_at_index(bitmap, bit_index) == 0)
+        {
+            //printf("Bit is free, adding to contiguous!\n");
+            if(contiguous == 0)
+            {
+                starting_index = bit_index;
+            }
+            contiguous++;
+            if(contiguous == pages_needed)
+            {
+                found = 1;
+                return starting_index;
+            }
+            
+        }
+        else
+        {
+            //printf("Bit is not free, resetting!\n");
+            contiguous = 0;
+        }
+        bit_index++;
+    }
+        //printf("Couldn't find it :/\n");
+        return -1;
+}
+
+void set_mult_bits(char* bitmap, unsigned long long bit_index, unsigned long long amount)
+{
+    while(amount > 0)
+    {
+        set_bit_at_index(bitmap, bit_index);
+        printf("Bit at index %llu is %d\n", bit_index, get_bit_at_index(bitmap, bit_index));
+        bit_index++;
+        amount--;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -178,10 +240,18 @@ void *get_next_avail(int num_pages)
  */
 void *n_malloc(unsigned int num_bytes)
 {
+    unsigned long long virtual_pages = MAX_MEMSIZE/PGSIZE;
     if(mem_initialized == 0)
     {
         set_physical_mem();
     }
+    int pages_needed =  ((num_bytes+PGSIZE-1)/PGSIZE);
+    printf("Pages needed for this allocation: %d\n", pages_needed);
+    set_mult_bits(vbit_map, find_free(vbit_map, virtual_pages, pages_needed), pages_needed);
+    
+    /*printf("Currently at index 9: %d\n", get_bit_at_index(vbit_map, 9));
+    set_bit_at_index(vbit_map, 9);
+    printf("After setting: %d\n", get_bit_at_index(vbit_map, 9));*/
     // TODO: Determine required pages, allocate them, and map them.
     return NULL; // Allocation failure placeholder.
 }
@@ -198,8 +268,8 @@ void *n_malloc(unsigned int num_bytes)
 void n_free(void *va, int size)
 {
     // TODO: Clear page table entries, update bitmaps, and invalidate TLB.
-    
-
+    int pages_freed =  ((size+PGSIZE-1)/PGSIZE);
+    printf("Pages to free: %d\n", pages_freed);
 
 }
 
