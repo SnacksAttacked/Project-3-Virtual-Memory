@@ -247,13 +247,15 @@ void *n_malloc(unsigned int num_bytes)
     }
     int pages_needed =  ((num_bytes+PGSIZE-1)/PGSIZE);
     printf("Pages needed for this allocation: %d\n", pages_needed);
-    set_mult_bits(vbit_map, find_free(vbit_map, virtual_pages, pages_needed), pages_needed);
+    unsigned long long page_to_start = find_free(vbit_map, virtual_pages, pages_needed);
+    if(page_to_start == (unsigned long long)-1)
+    {
+        return NULL;
+    }
+    set_mult_bits(vbit_map, page_to_start, pages_needed);
     
-    /*printf("Currently at index 9: %d\n", get_bit_at_index(vbit_map, 9));
-    set_bit_at_index(vbit_map, 9);
-    printf("After setting: %d\n", get_bit_at_index(vbit_map, 9));*/
     // TODO: Determine required pages, allocate them, and map them.
-    return NULL; // Allocation failure placeholder.
+    return page_to_start*0x1000; // Allocation failure placeholder.
 }
 
 /*
