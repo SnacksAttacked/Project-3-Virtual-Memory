@@ -195,7 +195,7 @@ pte_t *translate(pde_t *pgdir, void *va)
             ptr = ptr2[offset];
             if (ptr){
                 num = (num << 12) + offset;
-                return num;
+                return ptr;
             }
 
         }
