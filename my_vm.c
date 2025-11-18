@@ -189,12 +189,12 @@ pte_t *translate(pde_t *pgdir, void *va)
     
     if (ptr){
         long long int num = pgdir[dir];
-        pde_t *ptr2 = &ptr[table];
+        pte_t *ptr2 = &ptr[table];
         if (ptr2){
             num = (num << 10) + ptr[table];
             ptr = ptr2[offset];
             if (ptr){
-                num = (num << 20) + offset;
+                num = (num << 12) + offset;
                 return num;
             }
 

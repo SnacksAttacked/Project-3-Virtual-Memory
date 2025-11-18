@@ -80,6 +80,8 @@ int main(void) {
     // avoid leak in this probe-based check
     n_free(a, ARRAY_SIZE);
 
+
+
     return 0;
 }
 
