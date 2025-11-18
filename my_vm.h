@@ -40,7 +40,7 @@
 
 // --- Constants for bit shifts and masks ---
 #define PDXSHIFT 22 //10 bits for page lvl 1   /** TODO: number of bits to shift for directory index **/
-#define PTXSHIFT 12 //mask out top 10 bits, 10 bits for page 2   /** TODO: number of bits to shift for table index **/
+#define PTXSHIFT 22 //mask out top 10 bits, 10 bits for page 2   /** TODO: number of bits to shift for table index **/
 #define PXMASK   10     /** TODO:  **/
 #define OFFMASK  4095     /** TODO: **/
 

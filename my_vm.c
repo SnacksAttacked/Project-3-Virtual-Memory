@@ -181,9 +181,25 @@ pte_t *translate(pde_t *pgdir, void *va)
     // Return the corresponding PTE if found.
     pde_t* ptr = NULL;
     uint32_t temp = VA2U(va);
-    temp = temp >> PXMASK;
-    
+    uint32_t dir = PDX(temp);
+    uint32_t table = PTX(temp);
+    uint32_t offset = OFF(temp);
 
+    ptr = &pgdir[dir];
+    
+    if (ptr){
+        long long int num = pgdir[dir];
+        pde_t *ptr2 = &ptr[table];
+        if (ptr2){
+            num = (num << 10) + ptr[table];
+            ptr = ptr2[offset];
+            if (ptr){
+                num = (num << 20) + offset;
+                return num;
+            }
+
+        }
+    }
 
 
     //TODO later: TLB lookup
