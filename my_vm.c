@@ -221,6 +221,37 @@ pte_t *translate(pde_t *pgdir, void *va)
 int map_page(pde_t *pgdir, void *va, void *pa)
 {
     // TODO: Map virtual address to physical address in the page tables.
+    uint32_t temp = VA2U(va);
+    uint32_t dir = PDX(temp);
+    uint32_t table = PTX(temp);
+    uint32_t offset = OFF(temp);
+
+    pde_t *ptr = pgdir;
+
+    for (int i = 0; i < 10; i++){
+        if (ptr[i] == dir){
+            pte_t* ptr2 = &ptr[i];
+            for (int a = 0; a < 10; a++){
+                if (ptr2[a] == table){
+                   pte_t* offsetptr = &ptr2[a];
+                   if (offsetptr[offset] & 1 == 1){
+                        return 0;
+                   }
+                   else{
+                        offsetptr[offset] |= 1;
+                   }
+                }
+                else{
+
+                }
+            }
+        }
+        else{
+            
+        }
+    }
+
+
     return -1; // Failure placeholder.
 }
 
