@@ -271,8 +271,15 @@ int map_page(pde_t *pgdir, void *va, void *pa)
  */
 void *get_next_avail(int num_pages)
 {
+    unsigned long long virtual_pages = MAX_MEMSIZE/PGSIZE;
+    printf("Pages needed for this allocation: %d\n", num_pages);
+    unsigned long long page_to_start = find_free(vbit_map, virtual_pages, num_pages);
+    if(page_to_start == (unsigned long long)-1)
+    {
+        return NULL;
+    }
     // TODO: Implement virtual bitmap search for free pages.
-    return NULL; // No available block placeholder.
+    return (void*)(page_to_start*0x1000); // No available block placeholder.
 }
 
 /*
@@ -293,16 +300,12 @@ void *n_malloc(unsigned int num_bytes)
         set_physical_mem();
     }
     int pages_needed =  ((num_bytes+PGSIZE-1)/PGSIZE);
-    printf("Pages needed for this allocation: %d\n", pages_needed);
-    unsigned long long page_to_start = find_free(vbit_map, virtual_pages, pages_needed);
-    if(page_to_start == (unsigned long long)-1)
-    {
-        return NULL;
-    }
-    set_mult_bits(vbit_map, page_to_start, pages_needed);
+    void* base = get_next_avail(pages_needed);
+    printf("Found it at index %llu\n", (unsigned long long) base / 0x1000);
+    set_mult_bits(vbit_map, (unsigned long long) base / 0x1000, pages_needed);
     
     // TODO: Determine required pages, allocate them, and map them.
-    return page_to_start*0x1000; // Allocation failure placeholder.
+    return base; // Allocation failure placeholder.
 }
 
 /*
