@@ -34,10 +34,10 @@ static volatile int mem_initialized = 0;
 void set_physical_mem() {
     // TODO: Implement memory allocation for simulated physical memory.
     // Use 32-bit values for sizes, page counts, and offsets.
-    unsigned long long virtual_pages = MAX_MEMSIZE/PGSIZE; 
-    unsigned long long physical_pages = MEMSIZE/PGSIZE;
-    unsigned long long BITMAP_SIZE = physical_pages/8;
-    unsigned long long VBITMAP_SIZE = virtual_pages/8;
+    uint32_t virtual_pages = MAX_MEMSIZE/PGSIZE; 
+    uint32_t physical_pages = MEMSIZE/PGSIZE;
+    uint32_t BITMAP_SIZE = physical_pages/8;
+    uint32_t VBITMAP_SIZE = virtual_pages/8;
     bit_map = (char*)malloc(BITMAP_SIZE);
     memset(bit_map, 0, BITMAP_SIZE);
     vbit_map = (char*)malloc(VBITMAP_SIZE);
@@ -64,12 +64,12 @@ static int get_bit_at_index(char *bitmap, int index)
     return (bitmap[b] >> shift) & 1;
 }
 
-unsigned long long find_free(char* bitmap, unsigned long long page_ct, unsigned long long pages_needed)
+unsigned long long find_free(char* bitmap, uint32_t page_ct, uint32_t pages_needed)
 {
     int found = 0;
-    unsigned long long contiguous = 0;
-    unsigned long long starting_index = 0;
-    unsigned long long bit_index = 0;
+    uint32_t contiguous = 0;
+    uint32_t starting_index = 0;
+    uint32_t bit_index = 0;
     while(contiguous < pages_needed && bit_index < page_ct)
     {
         if(get_bit_at_index(bitmap, bit_index) == 0)
@@ -98,12 +98,12 @@ unsigned long long find_free(char* bitmap, unsigned long long page_ct, unsigned 
         return -1;
 }
 
-void set_mult_bits(char* bitmap, unsigned long long bit_index, unsigned long long amount)
+void set_mult_bits(char* bitmap, uint32_t bit_index, uint32_t amount)
 {
     while(amount > 0)
     {
         set_bit_at_index(bitmap, bit_index);
-        printf("Bit at index %llu is %d\n", bit_index, get_bit_at_index(bitmap, bit_index));
+        printf("Bit at index %u is %d\n", bit_index, get_bit_at_index(bitmap, bit_index));
         bit_index++;
         amount--;
     }
@@ -271,10 +271,10 @@ int map_page(pde_t *pgdir, void *va, void *pa)
  */
 void *get_next_avail(int num_pages)
 {
-    unsigned long long virtual_pages = MAX_MEMSIZE/PGSIZE;
+    uint32_t virtual_pages = MAX_MEMSIZE/PGSIZE;
     printf("Pages needed for this allocation: %d\n", num_pages);
-    unsigned long long page_to_start = find_free(vbit_map, virtual_pages, num_pages);
-    if(page_to_start == (unsigned long long)-1)
+    uint32_t page_to_start = find_free(vbit_map, virtual_pages, num_pages);
+    if(page_to_start == (uint32_t)-1)
     {
         return NULL;
     }
@@ -294,15 +294,16 @@ void *get_next_avail(int num_pages)
  */
 void *n_malloc(unsigned int num_bytes)
 {
-    unsigned long long virtual_pages = MAX_MEMSIZE/PGSIZE;
+    //printf("Size: %zu bytes\n", sizeof(unsigned long long));
+    uint32_t virtual_pages = MAX_MEMSIZE/PGSIZE;
     if(mem_initialized == 0)
     {
         set_physical_mem();
     }
-    int pages_needed =  ((num_bytes+PGSIZE-1)/PGSIZE);
+    uint32_t pages_needed =  ((num_bytes+PGSIZE-1)/PGSIZE);
     void* base = get_next_avail(pages_needed);
-    printf("Found it at index %llu\n", (unsigned long long) base / 0x1000);
-    set_mult_bits(vbit_map, (unsigned long long) base / 0x1000, pages_needed);
+    printf("Found it at index %u\n", (uint32_t) base / 0x1000);
+    set_mult_bits(vbit_map, (uint32_t) base / 0x1000, pages_needed);
     
     // TODO: Determine required pages, allocate them, and map them.
     return base; // Allocation failure placeholder.
