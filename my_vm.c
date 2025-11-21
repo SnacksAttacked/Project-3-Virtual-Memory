@@ -276,10 +276,10 @@ void *get_next_avail(int num_pages)
     uint32_t page_to_start = find_free(vbit_map, virtual_pages, num_pages);
     if(page_to_start == (uint32_t)-1)
     {
-        return NULL;
+        return NULL; // No available block placeholder.
     }
     // TODO: Implement virtual bitmap search for free pages.
-    return (void*)(page_to_start*0x1000); // No available block placeholder.
+    return U2VA(page_to_start*0x1000); 
 }
 
 /*
@@ -302,9 +302,8 @@ void *n_malloc(unsigned int num_bytes)
     }
     uint32_t pages_needed =  ((num_bytes+PGSIZE-1)/PGSIZE);
     void* base = get_next_avail(pages_needed);
-    printf("Found it at index %u\n", (uint32_t) base / 0x1000);
-    set_mult_bits(vbit_map, (uint32_t) base / 0x1000, pages_needed);
-    
+    printf("Found it at index %u\n", VA2U(base) / 0x1000);
+    set_mult_bits(vbit_map, VA2U(base) / 0x1000, pages_needed);
     // TODO: Determine required pages, allocate them, and map them.
     return base; // Allocation failure placeholder.
 }
