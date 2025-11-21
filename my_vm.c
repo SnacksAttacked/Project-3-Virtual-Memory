@@ -16,6 +16,7 @@ static char* physical_mem;
 static char* virtual_mem;
 static char* bit_map;
 static char* vbit_map;
+static pde_t* directory; 
 
 static volatile int mem_initialized = 0;
 
@@ -43,6 +44,9 @@ void set_physical_mem() {
     vbit_map = (char*)malloc(VBITMAP_SIZE);
     memset(vbit_map, 0, VBITMAP_SIZE);
     physical_mem = (char*)malloc(MEMSIZE);
+    memset(physical_mem, 0, MEMSIZE); //zeroes everything out in physical memory. 
+    directory = (pde_t*) physical_mem;
+    set_bit_at_index(bit_map, 0); //Initializes the page directory
     virtual_mem = (char*)malloc(MAX_MEMSIZE);
     mem_initialized = 1;
 }
@@ -322,6 +326,8 @@ void n_free(void *va, int size)
     // TODO: Clear page table entries, update bitmaps, and invalidate TLB.
     int pages_freed =  ((size+PGSIZE-1)/PGSIZE);
     printf("Pages to free: %d\n", pages_freed);
+    set_mult_bits(vbit_map, (VA2U(va) >> 12), pages_freed);
+    va = NULL;
 
 }
 
