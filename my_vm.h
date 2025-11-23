@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <math.h>
 
 /* ============================================================================
  *  Virtual Memory Simulation Header
@@ -35,14 +36,17 @@
 #define MAX_MEMSIZE    (1ULL << 32)  // Max virtual memory = 4 GB
 #define MEMSIZE        (1ULL << 30)  // Simulated physical memory = 1 GB
 
+#define OFFBITS         (__builtin_ctz(PGSIZE))
+#define ADDRBITS        (32-OFFBITS)
+
 
 //COMPLETE HERE
 
 // --- Constants for bit shifts and masks ---
-#define PDXSHIFT 22 //10 bits for page lvl 1   /** TODO: number of bits to shift for directory index **/
-#define PTXSHIFT 22 //mask out top 10 bits, 10 bits for page 2   /** TODO: number of bits to shift for table index **/
+#define PDXSHIFT (ADDRBITS/2) //10 bits for page lvl 1   /** TODO: number of bits to shift for directory index **/
+#define PTXSHIFT (ADDRBITS-PDXSHIFT) //mask out top 10 bits, 10 bits for page 2   /** TODO: number of bits to shift for table index **/
 #define PXMASK   10     /** TODO:  **/
-#define OFFMASK  4095     /** TODO: **/
+#define OFFMASK  (PGSIZE-1)    
 
 // --- Macros to extract address components ---
 #define PDX(va) va >> PDXSHIFT     /** TODO: compute directory index from virtual address **/

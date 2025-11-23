@@ -23,6 +23,24 @@ static volatile int mem_initialized = 0;
 // -----------------------------------------------------------------------------
 // Setup
 // -----------------------------------------------------------------------------
+
+static void set_bit_at_index(char *bitmap, int index)
+{
+    int b = index / 8;
+    int position = index % 8;
+    bitmap[b] = bitmap[b] ^ (1 << position);
+    return;
+}
+
+static int get_bit_at_index(char *bitmap, int index)
+{
+    int b = index / 8;
+    int shift = index % 8;
+    //Get to the location in the character bitmap array
+    //Hint: Right shift and AND will be invaluable here!
+    return (bitmap[b] >> shift) & 1;
+}
+
 /*
  * set_physical_mem()
  * ------------------
@@ -51,24 +69,9 @@ void set_physical_mem() {
     mem_initialized = 1;
 }
 
-static void set_bit_at_index(char *bitmap, int index)
-{
-    int b = index / 8;
-    int position = index % 8;
-    bitmap[b] = bitmap[b] ^ (1 << position);
-    return;
-}
 
-static int get_bit_at_index(char *bitmap, int index)
-{
-    int b = index / 8;
-    int shift = index % 8;
-    //Get to the location in the character bitmap array
-    //Hint: Right shift and AND will be invaluable here!
-    return (bitmap[b] >> shift) & 1;
-}
 
-unsigned long long find_free(char* bitmap, uint32_t page_ct, uint32_t pages_needed)
+uint32_t find_free(char* bitmap, uint32_t page_ct, uint32_t pages_needed)
 {
     int found = 0;
     uint32_t contiguous = 0;
@@ -188,8 +191,8 @@ pte_t *translate(pde_t *pgdir, void *va)
     uint32_t dir = PDX(temp);
     uint32_t table = PTX(temp);
     uint32_t offset = OFF(temp);
-
-    ptr = &pgdir[dir];
+    
+    ptr = &(pgdir[dir]);
     
     if (ptr){
         long long int num = pgdir[dir];
@@ -308,6 +311,9 @@ void *n_malloc(unsigned int num_bytes)
     void* base = get_next_avail(pages_needed);
     printf("Found it at index %u\n", VA2U(base) / 0x1000);
     set_mult_bits(vbit_map, VA2U(base) / 0x1000, pages_needed);
+    printf("Translated %p to: %ls\n", base, translate(directory, base));
+    
+    
     // TODO: Determine required pages, allocate them, and map them.
     return base; // Allocation failure placeholder.
 }
