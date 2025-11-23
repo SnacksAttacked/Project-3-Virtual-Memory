@@ -66,6 +66,7 @@ void set_physical_mem() {
     directory = (pde_t*) physical_mem;
     set_bit_at_index(bit_map, 0); //Initializes the page directory
     virtual_mem = (char*)malloc(MAX_MEMSIZE);
+    printf("Physical Pages: %d\n", physical_pages);
     mem_initialized = 1;
 }
 
@@ -199,7 +200,7 @@ pte_t *translate(pde_t *pgdir, void *va)
         pte_t *ptr2 = &ptr[table];
         if (ptr2){
             num = (num << 10) + ptr[table];
-            ptr = ptr2[offset];
+            ptr = &(ptr2[offset]);
             if (ptr){
                 num = (num << 12) + offset;
                 return ptr;
@@ -311,7 +312,7 @@ void *n_malloc(unsigned int num_bytes)
     void* base = get_next_avail(pages_needed);
     printf("Found it at index %u\n", VA2U(base) / 0x1000);
     set_mult_bits(vbit_map, VA2U(base) / 0x1000, pages_needed);
-    printf("Translated %p to: %ls\n", base, translate(directory, base));
+    printf("Translated %p to: %p\n", base, translate(directory, base));
     
     
     // TODO: Determine required pages, allocate them, and map them.
