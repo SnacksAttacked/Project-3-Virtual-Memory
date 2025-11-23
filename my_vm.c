@@ -66,7 +66,6 @@ void set_physical_mem() {
     directory = (pde_t*) physical_mem;
     set_bit_at_index(bit_map, 0); //Initializes the page directory
     virtual_mem = (char*)malloc(MAX_MEMSIZE);
-    printf("Physical Pages: %d\n", physical_pages);
     mem_initialized = 1;
 }
 
@@ -332,7 +331,7 @@ void n_free(void *va, int size)
     // TODO: Clear page table entries, update bitmaps, and invalidate TLB.
     int pages_freed =  ((size+PGSIZE-1)/PGSIZE);
     printf("Pages to free: %d\n", pages_freed);
-    set_mult_bits(vbit_map, (VA2U(va) >> 12), pages_freed);
+    set_mult_bits(vbit_map, (VA2U(va) >> OFFBITS), pages_freed);
     va = NULL;
 
 }
@@ -356,12 +355,24 @@ int put_data(void *va, void *val, int size)
     void* phys_addr = translate(directory, va);
     if(phys_addr == NULL)
     {
-        //find a free page
-        //map_page(directory, va, phys_addr);
+        uint32_t pages_needed = ((size+PGSIZE-1)/PGSIZE);
+        while(pages_needed > 0)
+        {
+            uint32_t start_index = find_free(bit_map, (MEMSIZE/PGSIZE), 1);
+            if(start_index == (uint32_t) -1)
+            {
+                printf("Couldn't find a page\n");
+                return 0;
+            }
+            set_bit_at_index(bit_map,start_index);
+            pages_needed--;
+            //map_page(directory, va, phys_addr);
+        }
+        
     }
     // TODO: Walk virtual pages, translate to physical addresses,
     // and copy data into simulated memory.
-    memcpy(phys_addr, val, size);
+    //memcpy(phys_addr, val, size);
 
 
     return -1; // Failure placeholder.
@@ -380,9 +391,9 @@ void get_data(void *va, void *val, int size)
     void* phys_addr = translate(directory, va);
     if(phys_addr == NULL)
     {
-        return NULL;
+        return;
     }
-    memcpy(val, phys_addr, size);
+    //memcpy(val, phys_addr, size);
     // TODO: Perform reverse operation of put_data().
     //
 }
