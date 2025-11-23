@@ -195,17 +195,16 @@ pte_t *translate(pde_t *pgdir, void *va)
     
     ptr = &(pgdir[dir]);
     
-    if (ptr){
+    if (pgdir[dir]){
         long long int num = pgdir[dir];
         pte_t *ptr2 = &ptr[table];
-        if (ptr2){
+        if (ptr[table]){
             num = (num << 10) + ptr[table];
             ptr = &(ptr2[offset]);
             if (ptr){
                 num = (num << 12) + offset;
                 return ptr;
             }
-
         }
     }
 
@@ -354,10 +353,15 @@ void n_free(void *va, int size)
  */
 int put_data(void *va, void *val, int size)
 {
+    void* phys_addr = translate(directory, va);
+    if(phys_addr == NULL)
+    {
+        //find a free page
+        //map_page(directory, va, phys_addr);
+    }
     // TODO: Walk virtual pages, translate to physical addresses,
     // and copy data into simulated memory.
-    
-    //memcpy(phys_addr, val, size);
+    memcpy(phys_addr, val, size);
 
 
     return -1; // Failure placeholder.
@@ -373,6 +377,12 @@ int put_data(void *va, void *val, int size)
  */
 void get_data(void *va, void *val, int size)
 {
+    void* phys_addr = translate(directory, va);
+    if(phys_addr == NULL)
+    {
+        return NULL;
+    }
+    memcpy(val, phys_addr, size);
     // TODO: Perform reverse operation of put_data().
     //
 }
