@@ -331,6 +331,13 @@ void *n_malloc(unsigned int num_bytes)
     printf("Found it at index %u\n", VA2U(base) / 0x1000);
     set_mult_bits(vbit_map, VA2U(base) / 0x1000, pages_needed);
     printf("Translated %p to: %p\n", base, translate(directory, base));
+
+    if (map_page(directory, translate(directory, base), physical_mem) == 0){
+        printf("\nit worked");
+    }
+    else{
+        printf("\nwe got an error");
+    }
     
     
     // TODO: Determine required pages, allocate them, and map them.
