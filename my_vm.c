@@ -242,57 +242,44 @@ int map_page(pde_t *pgdir, void *va, void *pa)
     uint32_t temp = VA2U(va);
     uint32_t dir = PDX(temp);
     uint32_t table = PTX(temp);
-    uint32_t offset = OFF(temp);
+   // uint32_t offset = OFF(temp);
 
     pde_t *ptr = pgdir;
 
-    //if page is found
-    if (ptr[dir] != NULL){
+    if (ptr[dir] == 0){
 
-        pte_t* ptr2 = &ptr[dir];
-
-            //if page is found
-            if (ptr2[table] != NULL){
-
-                pte_t* offsetptr = &ptr2[table];
-                
-                //if page w/ offset is found
-                if (offsetptr[offset] & 1 != 1){
-                    //creates page w/ offset
-
-                    offsetptr[offset] |= 1;
-
-                    //links phys and virt (maybe?)
-                    pa = va;
-                    va = offsetptr[offset];
-                    return 0;
-                }
-            }
-
-            else{
-                //create a page
-                ptr2[table] = get_next_phys(PGSIZE);                    
-                pte_t* page_table = (pte_t*) ptr2[table];
-
-                //link to phys
-                page_table[table] = (pte_t) pa;
-
-            }
-        }
-    else{
-
-        //TODO: implement if page in pgdir cant be found
-        //create a page in the page directory
         ptr[dir] = get_next_phys(PGSIZE);
-        
-        pte_t* page_table = (pte_t*) ptr[dir];
-        //link to phys
-        page_table[table] = (pte_t) pa;
+        if (ptr[dir] == NULL){
+            return -1; //cound't find a block
+        }
     }
 
+    pte_t* page_table = (pte_t*) ptr[dir];
 
-    return -1; // Failure placeholder.
+    if (page_table[table] == 0){
+         page_table[table] = (pte_t) pa;
+    }
+
+    if (page_table[table] == NULL){
+        return -1; // Failure placeholder.
+    }
+    
+    return 0;
 }
+
+// pte_t* offsetptr = &ptr2[table];
+                
+                // //if page w/ offset is found
+                // if (offsetptr[offset] & 1 != 1){
+                //     //creates page w/ offset
+
+                //     offsetptr[offset] |= 1;
+
+                //     //links phys and virt (maybe?)
+                //     pa = va;
+                //     va = offsetptr[offset];
+                //     return 0;
+                // }
 
 // -----------------------------------------------------------------------------
 // Allocation
