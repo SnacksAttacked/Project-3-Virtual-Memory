@@ -194,7 +194,7 @@ pte_t *translate(pde_t *pgdir, void *va)
     
     if (pgdir[dir]){
         long long int num = pgdir[dir];
-        pte_t *ptr2 = (pte_t*) pgdir+(pgdir[dir] & ~OFFMASK);
+        pte_t *ptr2 = (pte_t*) ((char*)pgdir+(pgdir[dir] & ~OFFMASK));
         if (ptr2[table]){
             return pgdir+(ptr2[table] & ~OFFMASK);
             /*
@@ -255,8 +255,8 @@ int map_page(pde_t *pgdir, void *va, void *pa)
         }
         ptr[dir] = phys_blk | 0x1;
     }
-
-    pte_t* page_table = (pte_t*) pgdir+(ptr[dir] & ~OFFMASK);
+    printf("(map_page) ptr[dir] equals %u\n", ptr[dir]);
+    pte_t* page_table = (pte_t*) ((char*)pgdir+(ptr[dir] & ~OFFMASK));
 
     if (page_table[table] == 0){
          page_table[table] = (pte_t) VA2U(pa);

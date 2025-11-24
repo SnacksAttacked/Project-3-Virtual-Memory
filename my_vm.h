@@ -38,19 +38,21 @@
 
 #define OFFBITS         (__builtin_ctz(PGSIZE))
 #define ADDRBITS        (32-OFFBITS)
+#define DIRBITS         (ADDRBITS/2) //bits in the directory
+#define TABBITS         (ADDRBITS-DIRBITS) //bits in the table
 
 
 //COMPLETE HERE
 
 // --- Constants for bit shifts and masks ---
-#define PDXSHIFT (ADDRBITS/2) //10 bits for page lvl 1   /** TODO: number of bits to shift for directory index **/
-#define PTXSHIFT (ADDRBITS-PDXSHIFT) //mask out top 10 bits, 10 bits for page 2   /** TODO: number of bits to shift for table index **/
-#define PXMASK   10     /** TODO:  **/
+#define PDXSHIFT ((TABBITS+OFFBITS) & ((1ULL << DIRBITS) - 1)) //10 bits for page lvl 1   /** TODO: number of bits to shift for directory index **/
+#define PTXSHIFT (OFFBITS) //mask out top 10 bits, 10 bits for page 2   /** TODO: number of bits to shift for table index **/
+#define PXMASK   (1ULL << TABBITS)-1     /** TODO:  **/
 #define OFFMASK  (PGSIZE-1)    
 
 // --- Macros to extract address components ---
-#define PDX(va) va >> PDXSHIFT     /** TODO: compute directory index from virtual address **/
-#define PTX(va) (va << PXMASK) >> PTXSHIFT     /** TODO: compute table index from virtual address **/
+#define PDX(va) (va >> PDXSHIFT)     /** TODO: compute directory index from virtual address **/
+#define PTX(va) ((va >> PTXSHIFT) & PXMASK)     /** TODO: compute table index from virtual address **/
 #define OFF(va) va & OFFMASK      /** TODO: compute page offset from virtual address **/
 
 // -----------------------------------------------------------------------------
