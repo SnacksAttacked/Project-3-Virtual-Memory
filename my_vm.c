@@ -246,53 +246,48 @@ int map_page(pde_t *pgdir, void *va, void *pa)
 
     pde_t *ptr = pgdir;
 
-    //walks the page table
-    for (int i = 0; i < 10; i++){
+    //if page is found
+    if (ptr[dir] != NULL){
 
-        //if page is found
-        if (ptr[i] == dir){
+        pte_t* ptr2 = &ptr[dir];
 
-            pte_t* ptr2 = &ptr[i];
+            //if page is found
+            if (ptr2[table] != NULL){
 
-            for (int a = 0; a < 10; a++){
+                pte_t* offsetptr = &ptr2[table];
                 
-                //if page is found
-                if (ptr2[a] == table){
+                //if page w/ offset is found
+                if (offsetptr[offset] & 1 != 1){
+                    //creates page w/ offset
 
-                   pte_t* offsetptr = &ptr2[a];
-                    
-                    //if page w/ offset is found
-                   if (offsetptr[offset] & 1 != 1){
-                        //creates page w/ offset
+                    offsetptr[offset] |= 1;
 
-                        offsetptr[offset] |= 1;
-
-                        //links phys and virt (maybe?)
-                        pa = va;
-                        va = offsetptr[offset];
-                        return 0;
-                   }
-                }
-
-                else{
-                    //create a page
-                    ptr[i] = get_next_phys(PGSIZE);                    
-                   pte_t* page_table = (pte_t*) ptr[i];
-
-                   //link to phys
-                   page_table[table] = (pte_t) pa;
-
+                    //links phys and virt (maybe?)
+                    pa = va;
+                    va = offsetptr[offset];
+                    return 0;
                 }
             }
-        }
-        else{
-             //create a page in the page directory
-            ptr[i] = get_next_phys(PGSIZE);                    
-            pte_t* page_table = (pte_t*) ptr[i];
 
-            //link to phys
-            page_table[table] = (pte_t) pa;
+            else{
+                //create a page
+                ptr2[table] = get_next_phys(PGSIZE);                    
+                pte_t* page_table = (pte_t*) ptr2[table];
+
+                //link to phys
+                page_table[table] = (pte_t) pa;
+
+            }
         }
+    else{
+
+        //TODO: implement if page in pgdir cant be found
+        //create a page in the page directory
+        ptr[dir] = get_next_phys(PGSIZE);
+        
+        pte_t* page_table = (pte_t*) ptr[dir];
+        //link to phys
+        page_table[table] = (pte_t) pa;
     }
 
 
