@@ -31,7 +31,7 @@
 // -----------------------------------------------------------------------------
 
 #define VA_BITS        32u           // Simulated virtual address width
-#define PGSIZE         4096u         // Page size = 4 KB
+#define PGSIZE         4096u         // Page size = 8 KB
 
 #define MAX_MEMSIZE    (1ULL << 32)  // Max virtual memory = 4 GB
 #define MEMSIZE        (1ULL << 30)  // Simulated physical memory = 1 GB

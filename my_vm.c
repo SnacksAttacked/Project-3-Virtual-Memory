@@ -307,7 +307,7 @@ void *get_next_avail(int num_pages)
         return NULL; // No available block placeholder.
     }
     // TODO: Implement virtual bitmap search for free pages.
-    return U2VA(page_to_start*0x1000); 
+    return U2VA(page_to_start*PGSIZE); 
 }
 
 /*
@@ -330,7 +330,7 @@ void *n_malloc(unsigned int num_bytes)
     }
     uint32_t pages_needed =  ((num_bytes+PGSIZE-1)/PGSIZE);
     void* base = get_next_avail(pages_needed);
-    uint32_t indx = VA2U(base) / 0x1000;
+    uint32_t indx = VA2U(base) / PGSIZE;
     printf("Found it at index %u\n", indx);
     set_mult_bits(vbit_map, indx, pages_needed);
     //printf("Translated %p to: %p\n", base, translate(directory, base));
