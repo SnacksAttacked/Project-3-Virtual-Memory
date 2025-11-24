@@ -248,7 +248,7 @@ int map_page(pde_t *pgdir, void *va, void *pa)
 
     if (ptr[dir] == 0){
 
-        ptr[dir] = get_next_phys(PGSIZE);
+        ptr[dir] = VA2U(get_next_phys(PGSIZE));
         if (ptr[dir] == NULL){
             return -1; //cound't find a block
         }
@@ -332,7 +332,7 @@ void *n_malloc(unsigned int num_bytes)
     set_mult_bits(vbit_map, VA2U(base) / 0x1000, pages_needed);
     printf("Translated %p to: %p\n", base, translate(directory, base));
 
-    if (map_page(directory, translate(directory, base), physical_mem) == 0){
+    if (map_page(directory, base, translate(directory, base)) == 0){
         printf("\nit worked");
     }
     else{
