@@ -186,24 +186,25 @@ pte_t *translate(pde_t *pgdir, void *va)
     // TODO: Extract the 32-bit virtual address and compute indices
     // for the page directory, page table, and offset.
     // Return the corresponding PTE if found.
-    pde_t* ptr = NULL;
+    pte_t* ptr = NULL;
     uint32_t temp = VA2U(va);
     uint32_t dir = PDX(temp);
     uint32_t table = PTX(temp);
     uint32_t offset = OFF(temp);
     
-    ptr = &(pgdir[dir]);
-    
     if (pgdir[dir]){
         long long int num = pgdir[dir];
-        pte_t *ptr2 = &ptr[table];
-        if (ptr[table]){
+        pte_t *ptr2 = (pte_t*) pgdir+(pgdir[dir] & ~OFFMASK);
+        if (ptr2[table]){
+            return pgdir+(ptr2[table] & ~OFFMASK);
+            /*
             num = (num << 10) + ptr[table];
             ptr = &(ptr2[offset]);
             if (ptr){
                 num = (num << 12) + offset;
                 return ptr;
-            }
+            }*/
+            
         }
     }
 
@@ -226,14 +227,15 @@ pte_t *translate(pde_t *pgdir, void *va)
  */
 
 //helper function to get avail phys block
-void * get_next_phys(int size){
-    uint32_t physical_block = MAX_MEMSIZE/PGSIZE;
-    uint32_t block_to_start = find_free(bit_map, physical_block, size);
+void * get_next_phys(){
+    uint32_t physical_block = MEMSIZE/PGSIZE;
+    uint32_t block_to_start = find_free(bit_map, physical_block, 1);
     if(block_to_start == (uint32_t)-1)
     {
         return NULL; // No available block placeholder.
     }
-    return U2VA(block_to_start*0x1000); 
+    set_bit_at_index(bit_map, block_to_start);
+    return U2VA(block_to_start*PGSIZE); 
 }
 
 int map_page(pde_t *pgdir, void *va, void *pa)
@@ -247,17 +249,17 @@ int map_page(pde_t *pgdir, void *va, void *pa)
     pde_t *ptr = pgdir;
 
     if (ptr[dir] == 0){
-
-        ptr[dir] = VA2U(get_next_phys(PGSIZE));
-        if (ptr[dir] == NULL){
+        uint32_t phys_blk = VA2U(get_next_phys(PGSIZE));
+        if (phys_blk == 0){
             return -1; //cound't find a block
         }
+        ptr[dir] = phys_blk | 0x1;
     }
 
-    pte_t* page_table = (pte_t*) ptr[dir];
+    pte_t* page_table = (pte_t*) pgdir+(ptr[dir] & ~OFFMASK);
 
     if (page_table[table] == 0){
-         page_table[table] = (pte_t) pa;
+         page_table[table] = (pte_t) VA2U(pa);
     }
 
     if (page_table[table] == NULL){
@@ -328,16 +330,25 @@ void *n_malloc(unsigned int num_bytes)
     }
     uint32_t pages_needed =  ((num_bytes+PGSIZE-1)/PGSIZE);
     void* base = get_next_avail(pages_needed);
-    printf("Found it at index %u\n", VA2U(base) / 0x1000);
-    set_mult_bits(vbit_map, VA2U(base) / 0x1000, pages_needed);
-    printf("Translated %p to: %p\n", base, translate(directory, base));
-
-    if (map_page(directory, base, translate(directory, base)) == 0){
+    uint32_t indx = VA2U(base) / 0x1000;
+    printf("Found it at index %u\n", indx);
+    set_mult_bits(vbit_map, indx, pages_needed);
+    //printf("Translated %p to: %p\n", base, translate(directory, base));
+    void* bs = base;
+    while (pages_needed > 0)
+    {
+        void* phys_page = get_next_phys();
+        if (map_page(directory, bs, phys_page) == 0){
         printf("\nit worked");
-    }
-    else{
+        }
+        else{
         printf("\nwe got an error");
+        }
+        pages_needed--;
+        bs = bs+PGSIZE;
     }
+    printf("Translated %p to: %p\n", base, translate(directory, base));
+    
     
     
     // TODO: Determine required pages, allocate them, and map them.
