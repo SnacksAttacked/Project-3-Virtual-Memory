@@ -224,6 +224,18 @@ pte_t *translate(pde_t *pgdir, void *va)
  *   0  -> Success (mapping created)
  *  -1  -> Failure (e.g., no space or invalid address)
  */
+
+//helper function to get avail phys block
+void * get_next_phys(int size){
+    uint32_t physical_block = MAX_MEMSIZE/PGSIZE;
+    uint32_t block_to_start = find_free(bit_map, physical_block, size);
+    if(block_to_start == (uint32_t)-1)
+    {
+        return NULL; // No available block placeholder.
+    }
+    return U2VA(block_to_start*0x1000); 
+}
+
 int map_page(pde_t *pgdir, void *va, void *pa)
 {
     // TODO: Map virtual address to physical address in the page tables.
@@ -234,26 +246,52 @@ int map_page(pde_t *pgdir, void *va, void *pa)
 
     pde_t *ptr = pgdir;
 
+    //walks the page table
     for (int i = 0; i < 10; i++){
+
+        //if page is found
         if (ptr[i] == dir){
+
             pte_t* ptr2 = &ptr[i];
+
             for (int a = 0; a < 10; a++){
+                
+                //if page is found
                 if (ptr2[a] == table){
+
                    pte_t* offsetptr = &ptr2[a];
-                   if (offsetptr[offset] & 1 == 1){
+                    
+                    //if page w/ offset is found
+                   if (offsetptr[offset] & 1 != 1){
+                        //creates page w/ offset
+
+                        offsetptr[offset] |= 1;
+
+                        //links phys and virt (maybe?)
+                        pa = va;
+                        va = offsetptr[offset];
                         return 0;
                    }
-                   else{
-                        offsetptr[offset] |= 1;
-                   }
                 }
+
                 else{
+                    //create a page
+                    ptr[i] = get_next_phys(PGSIZE);                    
+                   pte_t* page_table = (pte_t*) ptr[i];
+
+                   //link to phys
+                   page_table[table] = (pte_t) pa;
 
                 }
             }
         }
         else{
-            
+             //create a page in the page directory
+            ptr[i] = get_next_phys(PGSIZE);                    
+            pte_t* page_table = (pte_t*) ptr[i];
+
+            //link to phys
+            page_table[table] = (pte_t) pa;
         }
     }
 
