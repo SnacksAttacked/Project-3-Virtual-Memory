@@ -196,7 +196,7 @@ pte_t *translate(pde_t *pgdir, void *va)
         long long int num = pgdir[dir];
         pte_t *ptr2 = (pte_t*) ((char*)pgdir+(pgdir[dir] & ~OFFMASK));
         if (ptr2[table]){
-            return pgdir+(ptr2[table] & ~OFFMASK);
+            return (pgdir+(ptr2[table] & ~OFFMASK))+offset;
             /*
             num = (num << 10) + ptr[table];
             ptr = &(ptr2[offset]);
