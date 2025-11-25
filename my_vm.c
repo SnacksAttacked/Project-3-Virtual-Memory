@@ -339,10 +339,10 @@ void *n_malloc(unsigned int num_bytes)
     {
         void* phys_page = get_next_phys();
         if (map_page(directory, bs, phys_page) == 0){
-        printf("\nit worked");
+        printf("\nit worked\n");
         }
         else{
-        printf("\nwe got an error");
+        printf("\nwe got an error\n");
         }
         pages_needed--;
         bs = bs+PGSIZE;
@@ -410,7 +410,7 @@ int put_data(void *va, void *val, int size)
     }
     // TODO: Walk virtual pages, translate to physical addresses,
     // and copy data into simulated memory.
-    //memcpy(phys_addr, val, size);
+    memcpy(phys_addr, val, size);
 
 
     return -1; // Failure placeholder.
@@ -431,7 +431,8 @@ void get_data(void *va, void *val, int size)
     {
         return;
     }
-    //memcpy(val, phys_addr, size);
+    memcpy(val, phys_addr, size);
+
     // TODO: Perform reverse operation of put_data().
     //
 }

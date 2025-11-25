@@ -23,7 +23,7 @@ int main(void) {
     void *b = n_malloc(ARRAY_SIZE);
     void *c = n_malloc(ARRAY_SIZE);
 
-    int x = 1;
+    int x = 2;
     int y, z;
     int i = 0, j = 0;
     uint32_t address_a = 0, address_b = 0, address_c = 0;
