@@ -370,6 +370,10 @@ void n_free(void *va, int size)
     int pages_freed =  ((size+PGSIZE-1)/PGSIZE);
     printf("Pages to free: %d\n", pages_freed);
     set_mult_bits(vbit_map, (VA2U(va) >> OFFBITS), pages_freed);
+    printf("va: %x\n", (VA2U(va) & ~OFFMASK));
+    pte_t* translated_addr = translate(directory, va);
+    pde_t* pgdir = directory;
+    printf("pfn: %lx\n", translated_addr-pgdir);
     va = NULL;
 
 }
