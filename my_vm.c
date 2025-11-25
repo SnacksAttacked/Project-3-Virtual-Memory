@@ -1,10 +1,13 @@
 
 #include "my_vm.h"
 #include <string.h>   // optional for memcpy if you later implement put/get
+#include <pthread.h> //for mutex
 
 // -----------------------------------------------------------------------------
 // Global Declarations (optional)
 // -----------------------------------------------------------------------------
+
+pthread_mutex_t mlock = PTHREAD_MUTEX_INITIALIZER;
 
 struct tlb tlb_store; // Placeholder for your TLB structure
 
@@ -107,6 +110,7 @@ uint32_t find_free(char* bitmap, uint32_t page_ct, uint32_t pages_needed)
 
 void set_mult_bits(char* bitmap, uint32_t bit_index, uint32_t amount)
 {
+
     while(amount > 0)
     {
         set_bit_at_index(bitmap, bit_index);
@@ -114,6 +118,7 @@ void set_mult_bits(char* bitmap, uint32_t bit_index, uint32_t amount)
         bit_index++;
         amount--;
     }
+
 }
 
 // -----------------------------------------------------------------------------
@@ -323,6 +328,9 @@ void *get_next_avail(int num_pages)
 void *n_malloc(unsigned int num_bytes)
 {
     //printf("Size: %zu bytes\n", sizeof(unsigned long long));
+
+    pthread_mutex_lock(&mlock);
+
     uint32_t virtual_pages = MAX_MEMSIZE/PGSIZE;
     if(mem_initialized == 0)
     {
@@ -349,7 +357,7 @@ void *n_malloc(unsigned int num_bytes)
     }
     printf("Translated %p to: %p\n", base, translate(directory, base));
     
-    
+    pthread_mutex_unlock(&mlock);
     
     // TODO: Determine required pages, allocate them, and map them.
     return base; // Allocation failure placeholder.
@@ -366,6 +374,8 @@ void *n_malloc(unsigned int num_bytes)
  */
 void n_free(void *va, int size)
 {
+    pthread_mutex_lock(&mlock);
+
     // TODO: Clear page table entries, update bitmaps, and invalidate TLB.
     int pages_freed =  ((size+PGSIZE-1)/PGSIZE);
     printf("Pages to free: %d\n", pages_freed);
@@ -380,6 +390,8 @@ void n_free(void *va, int size)
         printf("Bit %u freed!\n", pfn);
     }
     va = NULL;
+
+    pthread_mutex_unlock(&mlock);
 
 }
 
@@ -399,6 +411,8 @@ void n_free(void *va, int size)
  */
 int put_data(void *va, void *val, int size)
 {
+    pthread_mutex_lock(&mlock);
+
     void* phys_addr = translate(directory, va);
     if(phys_addr == NULL)
     {
@@ -409,6 +423,9 @@ int put_data(void *va, void *val, int size)
             if(start_index == (uint32_t) -1)
             {
                 printf("Couldn't find a page\n");
+
+                pthread_mutex_unlock(&mlock);
+
                 return 0;
             }
             set_bit_at_index(bit_map,start_index);
@@ -421,6 +438,7 @@ int put_data(void *va, void *val, int size)
     // and copy data into simulated memory.
     memcpy(phys_addr, val, size);
 
+    pthread_mutex_unlock(&mlock);
 
     return -1; // Failure placeholder.
 }
@@ -435,12 +453,17 @@ int put_data(void *va, void *val, int size)
  */
 void get_data(void *va, void *val, int size)
 {
+    pthread_mutex_lock(&mlock);
+
     void* phys_addr = translate(directory, va);
     if(phys_addr == NULL)
     {
+        pthread_mutex_unlock(&mlock);
         return;
     }
     memcpy(val, phys_addr, size);
+
+    pthread_mutex_unlock(&mlock);
 
     // TODO: Perform reverse operation of put_data().
     //
