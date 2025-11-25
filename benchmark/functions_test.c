@@ -48,7 +48,7 @@ int main(void) {
             address_b = add_offset32(b, (size_t)i * SIZE * sizeof(int) + (size_t)j * sizeof(int));
             get_data(U2VA(address_a), &y, sizeof(int));
             get_data(U2VA(address_b), &z, sizeof(int));
-            printf("%d ", y);
+            printf("%d ", z);
         }
         printf("\n");
     }
