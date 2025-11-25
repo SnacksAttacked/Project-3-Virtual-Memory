@@ -373,7 +373,12 @@ void n_free(void *va, int size)
     printf("va: %x\n", (VA2U(va) & ~OFFMASK));
     pte_t* translated_addr = translate(directory, va);
     pde_t* pgdir = directory;
-    printf("pfn: %lx\n", translated_addr-pgdir);
+    uint32_t pfn = translated_addr-pgdir;
+    set_bit_at_index(bit_map, pfn);
+    if(get_bit_at_index(bit_map, pfn) == 0)
+    {
+        printf("Bit %u freed!\n", pfn);
+    }
     va = NULL;
 
 }
