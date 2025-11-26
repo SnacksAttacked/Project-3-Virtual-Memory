@@ -8,6 +8,7 @@
 // -----------------------------------------------------------------------------
 
 pthread_mutex_t mlock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mmlock = PTHREAD_MUTEX_INITIALIZER;
 
 struct tlb tlb_store; // Placeholder for your TLB structure
 
@@ -492,6 +493,8 @@ void mat_mult(void *mat1, void *mat2, int size, void *answer)
     int i, j, k;
     uint32_t a, b, c;
 
+    pthread_mutex_lock(&mmlock);
+
     int (*m1)[size] = (int (*)[size]) mat1;
     int (*m2)[size] = (int (*)[size]) mat2;
     int (*ans)[size] = (int (*)[size]) answer;
@@ -511,5 +514,8 @@ void mat_mult(void *mat1, void *mat2, int size, void *answer)
             put_data((void*)&ans[i][j], (void *)&c, sizeof(int)); // placeholder
         }
     }
+
+    pthread_mutex_unlock(&mmlock);
+
 }
 
