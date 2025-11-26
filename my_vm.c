@@ -115,7 +115,6 @@ void set_mult_bits(char* bitmap, uint32_t bit_index, uint32_t amount)
     while(amount > 0)
     {
         set_bit_at_index(bitmap, bit_index);
-        printf("Bit at index %u is %d\n", bit_index, get_bit_at_index(bitmap, bit_index));
         bit_index++;
         amount--;
     }
@@ -261,7 +260,6 @@ int map_page(pde_t *pgdir, void *va, void *pa)
         }
         ptr[dir] = phys_blk | 0x1;
     }
-    printf("(map_page) ptr[dir] equals %u\n", ptr[dir]);
     pte_t* page_table = (pte_t*) ((char*)pgdir+(ptr[dir] & ~OFFMASK));
 
     if (page_table[table] == 0){
@@ -306,7 +304,6 @@ int map_page(pde_t *pgdir, void *va, void *pa)
 void *get_next_avail(int num_pages)
 {
     uint32_t virtual_pages = MAX_MEMSIZE/PGSIZE;
-    printf("Pages needed for this allocation: %d\n", num_pages);
     uint32_t page_to_start = find_free(vbit_map, virtual_pages, num_pages);
     if(page_to_start == (uint32_t)-1)
     {
@@ -340,7 +337,6 @@ void *n_malloc(unsigned int num_bytes)
     uint32_t pages_needed =  ((num_bytes+PGSIZE-1)/PGSIZE);
     void* base = get_next_avail(pages_needed);
     uint32_t indx = VA2U(base) / PGSIZE;
-    printf("Found it at index %u\n", indx);
     set_mult_bits(vbit_map, indx, pages_needed);
     //printf("Translated %p to: %p\n", base, translate(directory, base));
     void* bs = base;
@@ -348,15 +344,12 @@ void *n_malloc(unsigned int num_bytes)
     {
         void* phys_page = get_next_phys();
         if (map_page(directory, bs, phys_page) == 0){
-        printf("\nit worked\n");
         }
         else{
-        printf("\nwe got an error\n");
         }
         pages_needed--;
         bs = bs+PGSIZE;
     }
-    printf("Translated %p to: %p\n", base, translate(directory, base));
     
     pthread_mutex_unlock(&mlock);
     
@@ -379,9 +372,7 @@ void n_free(void *va, int size)
 
     // TODO: Clear page table entries, update bitmaps, and invalidate TLB.
     int pages_freed =  ((size+PGSIZE-1)/PGSIZE);
-    printf("Pages to free: %d\n", pages_freed);
     set_mult_bits(vbit_map, (VA2U(va) >> OFFBITS), pages_freed);
-    printf("va: %x\n", (VA2U(va) & ~OFFMASK));
     while(pages_freed > 0)
     {
         pte_t* translated_addr = translate(directory, va);
@@ -390,7 +381,6 @@ void n_free(void *va, int size)
         if(get_bit_at_index(bit_map, pfn) == 1)
         {
             set_bit_at_index(bit_map, pfn);
-            printf("Bit %u freed!\n", pfn);
         }
         pages_freed--;
         va += PGSIZE;
@@ -430,7 +420,6 @@ int put_data(void *va, void *val, int size)
             if(start_index == (uint32_t) -1)
             {
                 printf("Couldn't find a page\n");
-
                 pthread_mutex_unlock(&mlock);
 
                 return 0;
