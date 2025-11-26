@@ -381,14 +381,20 @@ void n_free(void *va, int size)
     printf("Pages to free: %d\n", pages_freed);
     set_mult_bits(vbit_map, (VA2U(va) >> OFFBITS), pages_freed);
     printf("va: %x\n", (VA2U(va) & ~OFFMASK));
-    pte_t* translated_addr = translate(directory, va);
-    pde_t* pgdir = directory;
-    uint32_t pfn = translated_addr-pgdir;
-    set_bit_at_index(bit_map, pfn);
-    if(get_bit_at_index(bit_map, pfn) == 0)
+    while(pages_freed > 0)
     {
-        printf("Bit %u freed!\n", pfn);
+        pte_t* translated_addr = translate(directory, va);
+        pde_t* pgdir = directory;
+        uint32_t pfn = (translated_addr-pgdir)/PGSIZE;
+        if(get_bit_at_index(bit_map, pfn) == 1)
+        {
+            set_bit_at_index(bit_map, pfn);
+            printf("Bit %u freed!\n", pfn);
+        }
+        pages_freed--;
+        va += PGSIZE;
     }
+    
     va = NULL;
 
     pthread_mutex_unlock(&mlock);
