@@ -314,6 +314,38 @@ void *get_next_avail(int num_pages)
 }
 
 /*
+    free_rud()
+    Essentially, a copy of free that is reserved for 
+    freeing up blocks allocated in malloc if the malloc call fails.
+*/
+
+void free_rud(void *va, int size)
+{
+    pthread_mutex_lock(&mlock);
+
+    // TODO: Clear page table entries, update bitmaps, and invalidate TLB.
+    int pages_freed =  ((size+PGSIZE-1)/PGSIZE);
+    set_mult_bits(vbit_map, (VA2U(va) >> OFFBITS), pages_freed);
+    while(pages_freed > 0)
+    {
+        pte_t* translated_addr = translate(directory, va);
+        pde_t* pgdir = directory;
+        uint32_t pfn = (translated_addr-pgdir)/PGSIZE;
+        if(get_bit_at_index(bit_map, pfn) == 1)
+        {
+            set_bit_at_index(bit_map, pfn);
+        }
+        pages_freed--;
+        va += PGSIZE;
+    }
+    
+    va = NULL;
+
+    pthread_mutex_unlock(&mlock);
+
+}
+
+/*
  * n_malloc()
  * -----------
  * Allocates a given number of bytes in virtual memory.
@@ -326,10 +358,10 @@ void *get_next_avail(int num_pages)
 void *n_malloc(unsigned int num_bytes)
 {
     //printf("Size: %zu bytes\n", sizeof(unsigned long long));
-
-    pthread_mutex_lock(&mlock);
-
     uint32_t virtual_pages = MAX_MEMSIZE/PGSIZE;
+    uint32_t pages_allocated = 0;
+    
+    pthread_mutex_lock(&mlock);
     if(mem_initialized == 0)
     {
         set_physical_mem();
@@ -340,14 +372,17 @@ void *n_malloc(unsigned int num_bytes)
     set_mult_bits(vbit_map, indx, pages_needed);
     //printf("Translated %p to: %p\n", base, translate(directory, base));
     void* bs = base;
-    while (pages_needed > 0)
+    while (pages_allocated < pages_needed)
     {
         void* phys_page = get_next_phys();
         if (map_page(directory, bs, phys_page) == 0){
         }
         else{
+            free_rud(base, pages_allocated*PGSIZE);
+            pthread_mutex_unlock(&mlock);
+            return NULL;
         }
-        pages_needed--;
+        pages_allocated++;
         bs = bs+PGSIZE;
     }
     
